@@ -1,4 +1,5 @@
-// form1 build plate supporter.
+// form1 build plate supporter to hold the build plate still whilst 
+// removing the prints from it.
 
 module buildPlate() {
     
@@ -6,8 +7,8 @@ module buildPlate() {
     cube([144,144,7]);
     
     // Aluminium block
-    translate([5,5,6]) {
-        cube([132,132,30]);
+    translate([(144-134)/2,5,6]) {
+        cube([134,132,30]);
     }
     
     // Handle
@@ -61,6 +62,7 @@ plateYOffset = plateXOffset + 5;
         }
         union() {
             screwHoles(outerWidth/2, totalHeight);
+            
             translate([plateXOffset, plateYOffset,totalHeight-cutoutHeight]) {
                 rotate([15,0,0]) {
                     // plate part to be held is 142x142mm
