@@ -130,19 +130,19 @@ module sideConnectionHolesCutout(y) {
     // Bottom
     translate([boxWidth-40, y, boxDepth/2]) {
         rotate([0,90,0]) {
-            cylinder(d=4.5, h=100);
+            cylinder(d=4.3, h=100);
         }
     }
     
     translate([boxWidth-13, y, boxDepth/2]) {
         rotate([0,90,0]) {
-            cylinder(d=4.5, d2=8, h=4.1);
+            cylinder(d=4.3, d2=6.5, h=4.1);
         }
     }
     
     translate([boxWidth-9, y, boxDepth/2]) {
         rotate([0,90,0]) {
-            cylinder(d=8, h=100);
+            cylinder(d=6.5, h=100);
         }
     }
 }
