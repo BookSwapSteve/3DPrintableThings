@@ -190,6 +190,37 @@ module sideConnectionHolesCutouts() {
     sideConnectionHolesCutout(boxHeight-(topBottomThickness/2));
 }
 
+module extraSideScrewHole(x,y, length) {
+    // use z+10 to translate outside of model to help debug.
+    translate([x, y, boxDepth/2]) {
+        // Hole big enough for heat fit M3 nuts to be pished in.
+        translate([0, 0, 0]) {
+            rotate([0,90,0]) {
+                #cylinder(d=4.3, h=length);
+            }
+        }
+    }
+}
+
+// Extra holes (both sides) to allow for things to be screwed in
+// (such as cover to hide USB cable) or hooks to be hung.
+module extraSideScrewHoles() {
+    
+    
+// Max depth is...
+maxScrewHoleDepth = (boxWidth - fireWidth)/2;
+echo("maxScrewHoleDepth",maxScrewHoleDepth);
+actualScrewHoleDepth = maxScrewHoleDepth -2;
+    
+    
+yOffset = 18;
+    extraSideScrewHole(boxWidth - actualScrewHoleDepth,yOffset, maxScrewHoleDepth);
+    extraSideScrewHole(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, maxScrewHoleDepth);
+
+    extraSideScrewHole(-0.1,yOffset, actualScrewHoleDepth);
+    extraSideScrewHole(-0.1,boxHeight - yOffset, actualScrewHoleDepth);    
+}
+
 // Cutout for Kindle power switch
 module switchCutout() {
     translate([boxWidth-20, 22 + topBottomThickness, 8.5]) {
@@ -231,8 +262,8 @@ usbConnectorCover = +2; // change to +ve to cut through
     }
     
     // Let the cable drop down to go behind the mount
-    translate([boxWidth-boxSideWidth, usbSocketStartY+25+33, 1]) {
-        cube([boxSideWidth+ usbConnectorCover,12,6.5]);
+    translate([boxWidth-boxSideWidth, usbSocketStartY+25+38, 1]) {
+        #cube([boxSideWidth -2,7,6.5]);
     }
     
     // cable behind???...
@@ -353,6 +384,8 @@ module mountingHoleFlat(x,y) {
 
 module mountingHoles() {
 
+// Keep Offset (distance between holes) at 80mm
+// as this will allow the Kindle 7 mount to use the same mounting holes.
 holeY  = boxHeight / 2;
 offset = 80;
     
@@ -438,6 +471,8 @@ echo ("xOffset:",xOffset);
             usbCableCutout();
             
             cutCorners();           
+            
+            extraSideScrewHoles();
         }
     }
 }
@@ -485,16 +520,18 @@ echo("bezelThickness",bezelThickness);
                 cube([slicePoint, boxHeight, boxDepth-bezelThickness + 0.25]);
                 
                 // Extend the bexel by very slightly less than the cutout to allow for tollerance.
-                translate([-4.9, 0, boxDepth-bezelThickness]) {
-                    #cube([slicePoint-5, boxHeight, bezelThickness+0.02]);
+                translate([0, 0, boxDepth-bezelThickness]) {
+                    cube([slicePoint-4.8, boxHeight, bezelThickness+0.02]);
                 }
             }
         }
     }
 }
 
-wallMountLeft();
-//wallMountRight();
+//wallMountLeft();
+translate([0,-0,0]) {
+    wallMountRight();
+}
 
 translate([13,topBottomThickness + 0.5,(topBottomThickness/2)]) { // 240mm width
 //translate([13+15,topBottomThickness + 0.5,4.5]) {
