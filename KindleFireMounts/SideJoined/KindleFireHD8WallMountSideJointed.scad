@@ -1,13 +1,24 @@
 $fn=80;
-boxHeight = 150;
-boxDepth = 16.5;
-
-boxWidth = 240;
-topBottomThickness = 9;
 
 fireWidth = 216;
 fireHeight = 129.5;
-fireThickness = 10.5;
+fireThickness = 10.1;
+
+topBottomThickness = 9;
+//boxHeight = 150; - size of the currently printed one.
+//boxHeight = 146;
+//boxHeight = 147.5; // when using 9mm top/bottom thickness and 129.5 kindle
+boxHeight = (2*topBottomThickness) + fireHeight;
+echo("boxHeight",boxHeight);
+boxDepth = 16.5;
+boxWidth = 244;
+
+// How far the kindle is away from the back
+backThickness = 4.5;
+
+actualTopThickness = boxHeight - (fireHeight + topBottomThickness);
+echo("actualTopThickness",actualTopThickness );
+
 
 // Set how much of an overlap the borders of the 
 // case overlap onto the screen
@@ -21,10 +32,25 @@ displayYOverlap = 9;
 backboxStyle = 3; 
 
 // Cut the body into half.
-slicePoint = boxWidth-17;
+//slicePoint = boxWidth-17; // 16 for no indent caused by display. (17 for existing box)
+
+// Use -50 to split at the wide opening and which
+// means that no suports are required
+slicePoint = boxWidth-52.0;
 
 // How thick the left and right borders are.
 borderWidth = (boxWidth - fireWidth)/2;
+
+usbSocketStartY = 34.5 + topBottomThickness;
+
+// Set true to include a cutout for flat USB cable aligned with USB socket.
+useFlatUsbCable = false;
+
+// Set true to include a cutout for a round USB cable
+useRoundUsbCable = true;
+
+// Set true to make mounting holes key style rather than just round.
+useKeyHoleMounts = true;
 
 module fireModel() {
     // 2017 spec.
@@ -126,30 +152,42 @@ module backBoxCutout(depth) {
     }
 }
 
+// M3 x 16mm countersunk screw.
+// 14mm thread
+// 5.3mm head diameter.
 module sideConnectionHolesCutout(y) {
     // Bottom
-    translate([boxWidth-40, y, boxDepth/2]) {
-        rotate([0,90,0]) {
-            cylinder(d=4.3, h=100);
-        }
-    }
     
-    translate([boxWidth-13, y, boxDepth/2]) {
-        rotate([0,90,0]) {
-            cylinder(d=4.3, d2=6.5, h=4.1);
+    // use y-10 to translate outside of model to help debug.
+    translate([0, y, boxDepth/2]) {
+        // 12mm into the case for the screw body
+        translate([slicePoint-12, 0, 0]) {
+            rotate([0,90,0]) {
+                #cylinder(d=4.3, h=boxWidth-slicePoint+20);
+            }
         }
-    }
-    
-    translate([boxWidth-9, y, boxDepth/2]) {
-        rotate([0,90,0]) {
-            cylinder(d=6.5, h=100);
-        }
+        
+        // 6mm thread depth inside each component
+        // add the countersink + hole countout.
+        // NB: Using countersink as the hold is printed fat side down
+        // and a flat hold would not come out well.
+        translate([slicePoint+6, 0, 0]) {
+            rotate([0,90,0]) {
+                #cylinder(d=4.3, d2=6.8, h=2.5);
+            }
+            
+            translate([2.5, 0, 0]) {
+                rotate([0,90,0]) {
+                    #cylinder(d=6.8, h=boxWidth-slicePoint+20);
+                }
+            }
+        }        
     }
 }
 
 module sideConnectionHolesCutouts() {
-    sideConnectionHolesCutout(4.5);
-    sideConnectionHolesCutout(boxHeight-4.5);
+    sideConnectionHolesCutout(topBottomThickness/2);
+    sideConnectionHolesCutout(boxHeight-(topBottomThickness/2));
 }
 
 // Cutout for Kindle power switch
@@ -167,14 +205,40 @@ module switchCutout() {
 
 // Cutout for Kindle USB plug
 module usbPlugCutout() {
-    translate([boxWidth-13, 34.5 + topBottomThickness, 4.5]) {
+boxSideWidth = (borderWidth+0.1);
+    
+    translate([boxWidth-boxSideWidth, 34.5 + topBottomThickness, 4.5]) {
         //cube([28,14,9]);
     }
-    
-    translate([boxWidth - (borderWidth+0.1), 34.5 + topBottomThickness, 4.5]) {
-        #cube([borderWidth+0.2,15,9]);
+       
+    // Straight out connector.
+    translate([boxWidth - (borderWidth+0.1), usbSocketStartY, 4.5]) {
+        //cube([borderWidth+0.2,15,9]);
     }
+    
+    // USB connector can be hidden (hence -2)
+usbConnectorCover = +2; // change to +ve to cut through
+    
+    
+    // Right angle connector and power lead.
+    translate([boxWidth - boxSideWidth, usbSocketStartY, 4.5]) {
+        #cube([borderWidth + usbConnectorCover,25,10]);
+    }
+    
+    // And the cable from the USB plug...
+    translate([boxWidth - boxSideWidth, usbSocketStartY+25, 6.5]) {
+        cube([borderWidth+ usbConnectorCover,45,5]);
+    }
+    
+    // Let the cable drop down to go behind the mount
+    translate([boxWidth-boxSideWidth, usbSocketStartY+25+33, 1]) {
+        cube([boxSideWidth+ usbConnectorCover,12,6.5]);
+    }
+    
+    // cable behind???...
 }
+
+
 
 // Cutout for USB cable.
 module usbCableCutout() {
@@ -185,25 +249,46 @@ module usbCableCutout() {
         }
     }
     
-    // Cut out a section for the cable to run through
-    // -6 for use with USB B sized hole
-    translate([boxWidth/2-6, 47 ,0]) {    
-        translate([0, 0,-3.5]) {
-            rotate([45,0,0]) {
-             //   #cube([(boxWidth/2)+10, 6,6]);
+    if (useFlatUsbCable) {
+        // Cut out a section for the cable to run through
+        // -6 for use with USB B sized hole
+        translate([boxWidth/2-6, 47 ,0]) {    
+            translate([0, 0,-3.5]) {
+                rotate([45,0,0]) {
+                 //   #cube([(boxWidth/2)+10, 6,6]);
+                }
             }
-        }
-        
-        translate([0, 0 ,2]) {
-            #cube([(boxWidth/2)+10, 8,2.51]);
-        }
-        
-        translate([0,7 ,-3.5]) {
-            rotate([45,0,0]) {
-                //#cube([(boxWidth/2)+10, 6,6]);
+            
+            translate([0, 0 ,2]) {
+                #cube([(boxWidth/2)+10, 8,2.51]);
+            }
+            
+            translate([0,7 ,-3.5]) {
+                rotate([45,0,0]) {
+                    //#cube([(boxWidth/2)+10, 6,6]);
+                }
             }
         }
     }
+    
+    // This chops through the structure so really needs
+    // supports when printing.
+    if (useRoundUsbCable) {
+        // Let the cable drop down to go behind the mount
+        // 1mm offset leaves a small line of plastic all the way across
+        // keeping the top/bottom from moving when
+        translate([boxWidth/2-6, usbSocketStartY+25+38, 1]) {
+            // Cable is just 4.5mm
+            // if the back is made thicker this may result in 
+            // the hole not being available.
+            // if the back is made thinner a thinner cable
+            // will need to be used.
+            #cube([(boxWidth/2) + 0.2,7,4.5]);
+        }
+    }
+    
+    // Other option is for the ribbon flat flex cable from
+    // a QI charger which needs ~1mm cutout
 }
 
 
@@ -220,32 +305,78 @@ module mountingHoleCountersunk(x,y) {
     }
 }
 
+module oblongHole(x,y, d, h, length) {
+    translate([x,y,0]) {
+        // Bottom half 
+        cylinder(d=d, h=h);
+
+        // Top hald
+        translate([0,length,0]) {
+            cylinder(d=d, h=h);
+        }
+    }
+    
+    // rectangle inbetween
+    translate([x-d/2, y,0]) {
+        cube([d, length, h]);
+    }
+}
+
+
 // Flat screws make it easier to adjust
 // for level & alignment errors in drilling
 module mountingHoleFlat(x,y) {
-    translate([x,y,-1]) {
-        cylinder(d=6, h=4);
-    }
-    translate([x,y,1.5]) {
-        cylinder(d=14, h=5);
+    if (useKeyHoleMounts) {
+        // through hole
+        translate([0,0,-1]) {
+            oblongHole(x,y,5, 4, 8);
+        }
+        
+        // recess for screwhead to sit in.
+        translate([0,0,1.5]) {
+            oblongHole(x,y,14, 5, 8);
+        }
+        
+        // Large opening for screw head to come through.
+        translate([x,y,-1]) {
+            cylinder(d=10, h=5);
+        }
+    } else {    
+        translate([x,y,-1]) {
+            cylinder(d=5, h=4);
+        }
+        translate([x,y,1.5]) {
+            cylinder(d=10, h=5);
+        }
     }
 }
 
 module mountingHoles() {
+
+holeY  = boxHeight / 2;
+offset = 80;
     
-holeY  = 137 / 2;
-offSet = 40;
+// Make it so that the holes are always
+// the same distance apart (and from center)
+// so the box can be resized and not effect
+// hole placement.
+center = (boxWidth /2);
     
     // Center holes
-    mountingHoleFlat(offSet,holeY);
-    mountingHoleFlat(boxWidth - offSet,holeY);
+    mountingHoleFlat(center-offset,holeY);
+    mountingHoleFlat(center+offset,holeY);
         
     // Top/Bottom holes
-    mountingHoleFlat(40,25);
-    mountingHoleFlat(boxWidth-40,25);
+    // NB: These won't align in Y axis with top jointed
+    // enclosure we this case is taller.
+    // Don't include bottom if using eyes
+    if (!useKeyHoleMounts) {
+        mountingHoleFlat(center-offset,25);
+        mountingHoleFlat(center+offset,25);
+    }   
     
-    mountingHoleFlat(40,boxHeight -25);
-    mountingHoleFlat(boxWidth-40,boxHeight -25);
+    mountingHoleFlat(center-offset,boxHeight -25);
+    mountingHoleFlat(center+offset,boxHeight -25);
 }
 
 module cutCorners() {
@@ -289,7 +420,7 @@ echo ("xOffset:",xOffset);
         }
         union() {
             // TODO: Make back thicker to allow for screw mounts.
-            translate([xOffset, topBottomThickness, 4.5]) {
+            translate([xOffset, topBottomThickness, backThickness]) {
                 fireBodyCutout();
                 fireDisplayCutout();
             }
@@ -312,21 +443,36 @@ echo ("xOffset:",xOffset);
 }
 
 module wallMountLeft() {
+bezelThickness = boxDepth - (backThickness + fireThickness);
+echo("bezelThickness",bezelThickness);
+    
     difference() {
         union() {
             mainBody();
             // Pins/Magnets?
         }
         union() {
-            // Cut off just where the top section goes full width
-            translate([slicePoint, 0, -1]) {
-                cube([boxWidth, boxHeight, 20]);
+            // Cut off the right hand part after slicePoint.
+            // However... leave a small overlap on the bezzle
+            // so that the cut point isn't straight through
+            // which if not perfect will show the background wall.
+            translate([slicePoint, 0, -0.01]) {
+                cube([boxWidth-slicePoint+1, boxHeight, boxDepth-bezelThickness + 0.01]);
+                
+                // remove xmm of the bezel from the left section
+                // so that the right section can add this as overlap.
+                translate([-5, 0, boxDepth-bezelThickness]) {
+                    cube([boxWidth-slicePoint+11, boxHeight, bezelThickness+0.02]);
+                }
             }
         }
     }
 }
 
 module wallMountRight() {
+bezelThickness = boxDepth - (backThickness + fireThickness);
+echo("bezelThickness",bezelThickness);
+    
     difference() {
         union() {
             mainBody();
@@ -334,17 +480,23 @@ module wallMountRight() {
         }
         union() {
             // Cut off just where the top section goes full width
-            translate([0, 0, -1]) {
-                cube([boxWidth-17, boxHeight, 20]);
+            translate([0, 0, -0.01]) {
+                // cut out slighly more under the bezzel overlap to allow for a nicer fit.
+                cube([slicePoint, boxHeight, boxDepth-bezelThickness + 0.25]);
+                
+                // Extend the bexel by very slightly less than the cutout to allow for tollerance.
+                translate([-4.9, 0, boxDepth-bezelThickness]) {
+                    #cube([slicePoint-5, boxHeight, bezelThickness+0.02]);
+                }
             }
         }
     }
 }
 
-//wallMountLeft();
-wallMountRight();
+wallMountLeft();
+//wallMountRight();
 
-translate([13,topBottomThickness + 0.5,4.5]) { // 240mm width
+translate([13,topBottomThickness + 0.5,(topBottomThickness/2)]) { // 240mm width
 //translate([13+15,topBottomThickness + 0.5,4.5]) {
     //%fireModel();
 }
