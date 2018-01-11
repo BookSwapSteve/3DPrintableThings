@@ -1,13 +1,13 @@
 $fn=80;
 
 boxHeight = 137;
-boxWidth = 240;
+boxWidth = 236;
 //boxWidth = 268;   // Should hide just about all the USB plug
 boxDepth = 16.5;
 
 // Cutouts for the fire and the fire display.
-fireWidth = 216;
-fireHeight = 131;
+fireWidth = 214.5;
+fireHeight = 132; // bit of padding on top
 fireThickness = 10.5;
 
 // Cut the body into half.
@@ -28,6 +28,8 @@ displayYOverlap = 9;
 backboxStyle = 3; 
 
 topBottomThickness = 3;
+
+useKeyHoleMounts = true; 
 
 // Model of the Kindle Fire 8 HD (2017 Spec)
 module fireModel() {
@@ -71,7 +73,7 @@ module fireBodyCutout() {
     // And cut out a small slice on the button edge
     // to prevent the buttons getting pressed.
     translate([fireWidth-0.1, 0, 2.5]) {
-        cube([1,fireHeight, 3.5]);
+        #cube([1,fireHeight, 4.5]);
     }
 }
 
@@ -136,12 +138,32 @@ module topConnectionHolesCutout() {
                 
     // Use cube pins so as they 
     // can be printed with stength in the correct axis
-    translate([3,115,5]) {
-        #cube([5,15,5]);
+
+    translate([(borderWidth/2),slicePoint - 7.9,boxDepth/2]) {
+        rotate([-90,0,0]) {
+            cylinder(d=4.5, h=8);
+        }
     }
     
-    translate([boxWidth-9,115,5]) {
-        #cube([5,15,5]);
+    translate([boxWidth-(borderWidth/2),slicePoint - 7.9,boxDepth/2]) {
+        rotate([-90,0,0]) {
+            cylinder(d=4.5, h=8);
+        }
+    }
+}
+
+module addConnectingPins() {
+    //
+    translate([(borderWidth/2),slicePoint - 6,boxDepth/2]) {
+        rotate([-90,0,0]) {
+            cylinder(d1=3.5, d2=4.3, h=7);
+        }
+    }
+    
+    translate([boxWidth-(borderWidth/2),slicePoint - 6,boxDepth/2]) {
+        rotate([-90,0,0]) {
+            cylinder(d1=3.5, d=4.3, h=7);
+        }
     }
 }
 
@@ -209,20 +231,54 @@ module mountingHoleCountersunk(x,y) {
     }
 }
 
+module oblongHole(x,y, d, h, length) {
+    translate([x,y,0]) {
+        // Bottom half 
+        cylinder(d=d, h=h);
+
+        // Top hald
+        translate([0,length,0]) {
+            cylinder(d=d, h=h);
+        }
+    }
+    
+    // rectangle inbetween
+    translate([x-d/2, y,0]) {
+        cube([d, length, h]);
+    }
+}
+
 // Flat screws make it easier to adjust
 // for level & alignment errors in drilling
 module mountingHoleFlat(x,y) {
-    translate([x,y,-1]) {
-        cylinder(d=6, h=4);
-    }
-    translate([x,y,1.5]) {
-        cylinder(d=14, h=5);
+    if (useKeyHoleMounts) {
+        // through hole
+        translate([0,0,-1]) {
+            oblongHole(x,y,5, 4, 8);
+        }
+        
+        // recess for screwhead to sit in.
+        translate([0,0,1.5]) {
+            oblongHole(x,y,10, 5, 8);
+        }
+        
+        // Large opening for screw head to come through.
+        translate([x,y,-1]) {
+            cylinder(d=8, h=5);
+        }
+    } else {    
+        translate([x,y,-1]) {
+            cylinder(d=6, h=4);
+        }
+        translate([x,y,1.5]) {
+            cylinder(d=14, h=5);
+        }
     }
 }
 
 module mountingHoles() {
     
-holeY  = 137 / 2;
+holeY  = boxHeight / 2;
 offset = 80;
     
 // Make it so that the holes are always
@@ -232,15 +288,18 @@ offset = 80;
 center = (boxWidth /2);
     
     // Center holes
-    #mountingHoleFlat(center-offset,holeY);
-    #mountingHoleFlat(center+offset,holeY);
+    mountingHoleFlat(center-offset,holeY);
+    mountingHoleFlat(center+offset,holeY);
         
-    // Top/Bottom holes
-    #mountingHoleFlat(center-offset,25);
-    #mountingHoleFlat(center+offset,25);
+    // Top/Bottom holes. Don't include bottom if using eyes
+    if (!useKeyHoleMounts) {
+        mountingHoleFlat(center-offset,25);
+        mountingHoleFlat(center+offset,25);
+    }
     
-    #mountingHoleFlat(center-offset,boxHeight -25);
-    #mountingHoleFlat(center+offset,boxHeight -25);
+    mountingHoleFlat(center-offset,boxHeight -25);
+    mountingHoleFlat(center+offset,boxHeight -25);
+   
 }
 
 module cutCorners() {
@@ -258,13 +317,13 @@ module cutCorners() {
     
     translate([0,boxHeight-7,0]) {
         rotate([0,0,45]) {
-            #cube([10,10,20]) ;
+            cube([10,10,20]) ;
         }
     }
     
     translate([boxWidth,boxHeight-7,0]) {
         rotate([0,0,45]) {
-            #cube([10,10,20]) ;
+            cube([10,10,20]) ;
         }
     }
 }
@@ -331,10 +390,11 @@ module wallMountTop() {
             }
         }
     }
+    addConnectingPins();
 }
 
 wallMountLower();
-//wallMountTop();
+wallMountTop();
 
 translate([13,3.5,4.5]) {
 //translate([13+14,3.5,4.5]) {
