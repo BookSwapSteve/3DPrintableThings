@@ -10,7 +10,7 @@ topBottomThickness = 9;
 //boxHeight = 147.5; // when using 9mm top/bottom thickness and 129.5 kindle
 boxHeight = (2*topBottomThickness) + fireHeight;
 echo("boxHeight",boxHeight);
-boxDepth = 16.5;
+boxDepth = 15.8;
 boxWidth = 244;
 
 // How far the kindle is away from the back
@@ -26,7 +26,7 @@ echo("actualTopThickness",actualTopThickness );
 displayXOverlap = 4;
 // NB: This will effect the cut point 
 // for cutting the box in two.
-displayYOverlap = 9;
+displayYOverlap = 7;
 
 // Style of hole in the back. 1=80x80 UK box, 2=Small USB connector, 3=Large
 backboxStyle = 3; 
@@ -159,11 +159,11 @@ module sideConnectionHolesCutout(y) {
     // Bottom
     
     // use y-10 to translate outside of model to help debug.
-    translate([0, y, boxDepth/2]) {
+    translate([0, y, boxDepth/2+0]) {
         // 12mm into the case for the screw body
         translate([slicePoint-12, 0, 0]) {
             rotate([0,90,0]) {
-                #cylinder(d=4.3, h=boxWidth-slicePoint+20);
+                cylinder(d=4.3, h=boxWidth-slicePoint+20);
             }
         }
         
@@ -173,15 +173,25 @@ module sideConnectionHolesCutout(y) {
         // and a flat hold would not come out well.
         translate([slicePoint+6, 0, 0]) {
             rotate([0,90,0]) {
-                #cylinder(d=4.3, d2=6.8, h=2.5);
+                cylinder(d=4.3, d2=6.8, h=2.5);
             }
             
             translate([2.5, 0, 0]) {
                 rotate([0,90,0]) {
-                    #cylinder(d=6.8, h=boxWidth-slicePoint+20);
+                    cylinder(d=6.8, h=boxWidth-slicePoint+20);
                 }
             }
         }        
+        
+        // Allow a small recess in the right hand side
+        // where it's expected to mate with the left heat fit insert
+        // so that a little excuess material raised above the surface
+        // doesn't impact the joint.
+        translate([slicePoint-0.2, 0, 0]) {
+            rotate([0,90,0]) {
+                cylinder(d=6, h=3);
+            }
+        }
     }
 }
 
@@ -191,12 +201,26 @@ module sideConnectionHolesCutouts() {
 }
 
 module extraSideScrewHole(x,y, length) {
+   
     // use z+10 to translate outside of model to help debug.
     translate([x, y, boxDepth/2]) {
         // Hole big enough for heat fit M3 nuts to be pished in.
         translate([0, 0, 0]) {
             rotate([0,90,0]) {
-                #cylinder(d=4.3, h=length);
+                cylinder(d=4.3, h=length);
+            }
+        }
+    }
+}
+
+module extraSideScrewHoleCaptiveNut(x,y, length) {
+       
+    // use z+10 to translate outside of model to help debug.
+    translate([x, y, boxDepth/2]) {
+        // Hole big enough for heat fit M3 nuts to be pished in.
+        translate([0, 0, 0]) {
+            rotate([0,90,0]) {
+                cylinder(d=6.5, h=length, $fn=6);
             }
         }
     }
@@ -209,16 +233,20 @@ module extraSideScrewHoles() {
     
 // Max depth is...
 maxScrewHoleDepth = (boxWidth - fireWidth)/2;
-echo("maxScrewHoleDepth",maxScrewHoleDepth);
-actualScrewHoleDepth = maxScrewHoleDepth -2;
+actualScrewHoleDepth = maxScrewHoleDepth +1; // -2 for heat fit
     
     
 yOffset = 18;
-    extraSideScrewHole(boxWidth - actualScrewHoleDepth,yOffset, maxScrewHoleDepth);
-    extraSideScrewHole(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, maxScrewHoleDepth);
+    extraSideScrewHole(boxWidth - actualScrewHoleDepth,yOffset, actualScrewHoleDepth);
+    extraSideScrewHole(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, actualScrewHoleDepth);
+    #extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,yOffset,6.5);
+    #extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, 6.5);
+    
 
     extraSideScrewHole(-0.1,yOffset, actualScrewHoleDepth);
     extraSideScrewHole(-0.1,boxHeight - yOffset, actualScrewHoleDepth);    
+    extraSideScrewHoleCaptiveNut(actualScrewHoleDepth-6,yOffset,6.5);
+    extraSideScrewHoleCaptiveNut(actualScrewHoleDepth-6,boxHeight - yOffset, 6.5);
 }
 
 // Cutout for Kindle power switch
@@ -521,7 +549,7 @@ echo("bezelThickness",bezelThickness);
                 
                 // Extend the bexel by very slightly less than the cutout to allow for tollerance.
                 translate([0, 0, boxDepth-bezelThickness]) {
-                    cube([slicePoint-4.8, boxHeight, bezelThickness+0.02]);
+                    cube([slicePoint-5.0, boxHeight, bezelThickness+0.02]);
                 }
             }
         }
