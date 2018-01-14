@@ -10,11 +10,16 @@ topBottomThickness = 9;
 //boxHeight = 147.5; // when using 9mm top/bottom thickness and 129.5 kindle
 boxHeight = (2*topBottomThickness) + fireHeight;
 echo("boxHeight",boxHeight);
-boxDepth = 15.8;
+
+// Stick on trunking comes in 16mm depth (+0.5-1mm for the sticky pad.) Make thickness deeper than that so it doesn't stick out. (Don't go below 16mm as the bezel print gets messy)
+boxDepth = 17.0;
+echo("boxDepth",boxDepth);
 boxWidth = 244;
 
 // How far the kindle is away from the back
-backThickness = 4.5;
+// Tuned to leave 3x nozzle width for the bezzle (1.8mm, 0.6mm nozzle).
+// can probably do better with a 0.4mm nozzle.
+backThickness = 5.1;
 
 actualTopThickness = boxHeight - (fireHeight + topBottomThickness);
 echo("actualTopThickness",actualTopThickness );
@@ -26,7 +31,7 @@ echo("actualTopThickness",actualTopThickness );
 displayXOverlap = 4;
 // NB: This will effect the cut point 
 // for cutting the box in two.
-displayYOverlap = 7;
+displayYOverlap = 3;
 
 // Style of hole in the back. 1=80x80 UK box, 2=Small USB connector, 3=Large
 backboxStyle = 3; 
@@ -36,7 +41,10 @@ backboxStyle = 3;
 
 // Use -50 to split at the wide opening and which
 // means that no suports are required
-slicePoint = boxWidth-52.0;
+//slicePoint = boxWidth-52.0;
+// Set slicepoint to boxWidth-46.0 (bw of 244) to get the moddle to fit on an Ultimaker (200mm height).
+slicePoint = boxWidth-46.0;
+echo ("slicePoint", slicePoint);
 
 // How thick the left and right borders are.
 borderWidth = (boxWidth - fireWidth)/2;
@@ -51,6 +59,38 @@ useRoundUsbCable = true;
 
 // Set true to make mounting holes key style rather than just round.
 useKeyHoleMounts = true;
+
+// Box style, 1 = CutCorners, 2 = Square, 3 = Rounded corners. (3: requires horizontal printing, 2: increased risk of edge lift when printing).
+outerBoxStyle = 3;
+
+// True for rounded corners on display cutout
+roundedDisplayCutout = true;
+
+module roundedCube(width, height, depth, cornerRadius) {
+    
+    //cube([width, height, depth]);
+    union() {
+        translate([cornerRadius,cornerRadius,0]) {
+            cylinder(r=8, h=depth);   
+        }
+        translate([width-cornerRadius,cornerRadius,0]) {
+            cylinder(r=cornerRadius, h=depth);
+        }
+        translate([cornerRadius,height-cornerRadius,0]) {
+            cylinder(r=cornerRadius, h=depth);
+        }
+        translate([width-cornerRadius,height-cornerRadius,0]) {
+            cylinder(r=cornerRadius, h=depth);
+        }
+        
+        translate([cornerRadius, 0, 0]) {
+            cube([width-(2*cornerRadius), height, depth]);
+        }
+        translate([0, cornerRadius, 0]) {
+            cube([width, height-(2*cornerRadius), depth]);
+        }
+    }
+}
 
 module fireModel() {
     // 2017 spec.
@@ -104,7 +144,13 @@ displayCutoutHeight =fireHeight - (2*displayYOverlap);
     
     //translate([6, 9, 7.7]) {
     translate([displayXOverlap, displayYOverlap, 7.7]) {
-        cube ([displayCutoutWidth,displayCutoutHeight , 100]);
+        //
+        if (roundedDisplayCutout) {
+            roundedCube (displayCutoutWidth,displayCutoutHeight , boxDepth, 8);
+        } else {
+            cube ([displayCutoutWidth,displayCutoutHeight, boxDepth]);
+        }
+            
     }
     
     // Camera
@@ -132,7 +178,7 @@ backBoxSize = 80; // 80x80
 }
 
 module largeBackBoxCutout( depth) {
-width = 140;
+width = 170;
 height = 110;
 yOffset = (boxHeight-height) / 2;
 echo ("cutout yOffset",yOffset);
@@ -220,7 +266,7 @@ module extraSideScrewHoleCaptiveNut(x,y, length) {
         // Hole big enough for heat fit M3 nuts to be pished in.
         translate([0, 0, 0]) {
             rotate([0,90,0]) {
-                cylinder(d=6.5, h=length, $fn=6);
+                cylinder(d=7.5, h=length, $fn=6);
             }
         }
     }
@@ -239,14 +285,52 @@ actualScrewHoleDepth = maxScrewHoleDepth +1; // -2 for heat fit
 yOffset = 18;
     extraSideScrewHole(boxWidth - actualScrewHoleDepth,yOffset, actualScrewHoleDepth);
     extraSideScrewHole(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, actualScrewHoleDepth);
-    #extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,yOffset,6.5);
-    #extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, 6.5);
+    extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,yOffset,6.5);
+    extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, 6.5);
     
 
     extraSideScrewHole(-0.1,yOffset, actualScrewHoleDepth);
     extraSideScrewHole(-0.1,boxHeight - yOffset, actualScrewHoleDepth);    
     extraSideScrewHoleCaptiveNut(actualScrewHoleDepth-6,yOffset,6.5);
     extraSideScrewHoleCaptiveNut(actualScrewHoleDepth-6,boxHeight - yOffset, 6.5);
+}
+
+// This needs supports. The support material can be left in
+// unless needed for actual cable exit.
+// Cutout to allow the cable to exit through 
+// the bottom of the mount 
+module verticalCableExit() {
+
+// Don't cut all the way through the shell, allow the user
+// to do this so maintaining a nice outer finish.
+leaveWallThickness = 1;
+    
+middleX = boxWidth / 2;
+// Make it go all the way from top to bottom
+// so trunking can be used up or down
+height = boxHeight - 2*leaveWallThickness;
+
+cableDiameter = 6;
+echo ("cableDiameter",cableDiameter);
+    
+// Leave 1mm of constant fill.
+maxCableCutout = backThickness -0.6 ;
+echo ("maxCableCutout",maxCableCutout);
+    
+    // 
+    translate([middleX + maxCableCutout/2, leaveWallThickness ,cableDiameter/2]) {
+        rotate([-90,0,0]) {
+            //#cylinder(d=cableDiameter, h=middleY);
+        }
+    }
+    
+    // Give the Z-printed overlaps
+    translate([middleX-(cableDiameter/2), leaveWallThickness, -0.1]) {
+        
+        cube([cableDiameter, height, maxCableCutout]);
+        
+        
+    }
 }
 
 // Cutout for Kindle power switch
@@ -258,7 +342,7 @@ module switchCutout() {
     }
     
     translate([boxWidth - (borderWidth+0.1), 15+topBottomThickness, 2 + 4.5]) {
-        #cube([borderWidth+0.2, 13, 5]);
+        cube([borderWidth+0.2, 13, 5]);
     }
 }
 
@@ -281,12 +365,12 @@ usbConnectorCover = +2; // change to +ve to cut through
     
     // Right angle connector and power lead.
     translate([boxWidth - boxSideWidth, usbSocketStartY, 4.5]) {
-        #cube([borderWidth + usbConnectorCover,25,10]);
+        cube([borderWidth + usbConnectorCover,25,10]);
     }
     
     // And the cable from the USB plug...
     translate([boxWidth - boxSideWidth, usbSocketStartY+25, 6.5]) {
-        cube([borderWidth+ usbConnectorCover,45,5]);
+        #cube([borderWidth+ usbConnectorCover,45,5]);
     }
     
     // Let the cable drop down to go behind the mount
@@ -415,7 +499,7 @@ module mountingHoles() {
 // Keep Offset (distance between holes) at 80mm
 // as this will allow the Kindle 7 mount to use the same mounting holes.
 holeY  = boxHeight / 2;
-offset = 80;
+offset = 100;
     
 // Make it so that the holes are always
 // the same distance apart (and from center)
@@ -477,7 +561,11 @@ echo ("xOffset:",xOffset);
     
     difference() {
         union() {
-            cube ([boxWidth, boxHeight, boxDepth]);
+            if (outerBoxStyle == 3) {
+                roundedCube (boxWidth, boxHeight, boxDepth, 20);
+            } else {
+                cube ([boxWidth, boxHeight, boxDepth]);
+            }
         }
         union() {
             // TODO: Make back thicker to allow for screw mounts.
@@ -498,12 +586,22 @@ echo ("xOffset:",xOffset);
             
             usbCableCutout();
             
-            cutCorners();           
+            if (outerBoxStyle == 1) {
+                cutCorners();           
+            }
             
             extraSideScrewHoles();
+            
+            // Cut out space for the cable to edit top
+            // or bottom of the box for surface mounted trunking
+            verticalCableExit();
         }
     }
 }
+
+// Use multiple of layer height for 
+// best 
+bezelOverlap = 2.0;
 
 module wallMountLeft() {
 bezelThickness = boxDepth - (backThickness + fireThickness);
@@ -524,7 +622,7 @@ echo("bezelThickness",bezelThickness);
                 
                 // remove xmm of the bezel from the left section
                 // so that the right section can add this as overlap.
-                translate([-5, 0, boxDepth-bezelThickness]) {
+                translate([-bezelOverlap, 0, boxDepth-bezelThickness]) {
                     cube([boxWidth-slicePoint+11, boxHeight, bezelThickness+0.02]);
                 }
             }
@@ -549,15 +647,22 @@ echo("bezelThickness",bezelThickness);
                 
                 // Extend the bexel by very slightly less than the cutout to allow for tollerance.
                 translate([0, 0, boxDepth-bezelThickness]) {
-                    cube([slicePoint-5.0, boxHeight, bezelThickness+0.02]);
+                    cube([slicePoint-bezelOverlap, boxHeight, bezelThickness+0.02]);
                 }
             }
         }
     }
 }
 
-//wallMountLeft();
-translate([0,-0,0]) {
+// Used for build options.
+showLeft = false;
+showRight = true;
+
+if (showLeft) {
+    wallMountLeft();
+}
+
+if (showRight) {
     wallMountRight();
 }
 
@@ -565,5 +670,15 @@ translate([13,topBottomThickness + 0.5,(topBottomThickness/2)]) { // 240mm width
 //translate([13+15,topBottomThickness + 0.5,4.5]) {
     //%fireModel();
 }
+
+
+// TODO: Add cable exit point 1/2 
+// going through the bottom to allow for the USB lead to go down.
+
+// Add 2 holes in bottom to 40mm each side of center
+// to allow for something to be mounted... (or a screw on cover where the cable comes out.
+
+
+
 
 
