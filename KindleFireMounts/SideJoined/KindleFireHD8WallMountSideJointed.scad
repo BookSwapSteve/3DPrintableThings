@@ -1,4 +1,4 @@
-$fn=80;
+$fn=120;
 
 fireWidth = 216;
 fireHeight = 129.5;
@@ -61,17 +61,51 @@ useRoundUsbCable = true;
 useKeyHoleMounts = true;
 
 // Box style, 1 = CutCorners, 2 = Square, 3 = Rounded corners. (3: requires horizontal printing, 2: increased risk of edge lift when printing).
-outerBoxStyle = 3;
+// NB: curved preview appears to break OpenSCAD
+outerBoxStyle = 1;
 
-// True for rounded corners on display cutout
-roundedDisplayCutout = true;
+// Box style for the display cutout.  1 = CutCorners, 2 = Square, 3 = Rounded corners. (3: requires horizontal printing, 2: increased risk of edge lift when printing).
+displayBoxStyle  = 2;
+
+// Set to false to cover the camera. Needs side bezle thick enough though.
+includeCameraHole = true;
+
+// Make the left hand (larger) secton.
+showLeft = false;
+
+// Makes the right hand (smaller) section.
+showRight = true;
+
+includeExtraSideScrewHoles = false;
+
+module noCornersCube(width, height, depth, cornerRadius) {
+    
+    //cube([width, height, depth]);
+    union() {
+        linear_extrude(height=depth) {
+            // Square with corners cut.
+            polygon([
+            [cornerRadius,0],
+            [width-cornerRadius, 0],
+            [width, cornerRadius],
+            [width, height-cornerRadius],
+            [width-cornerRadius, height],
+            [cornerRadius, height],
+            [0, height-cornerRadius],
+            [0, cornerRadius],
+            [cornerRadius,0]
+            ]);
+        }
+        
+    }
+}
 
 module roundedCube(width, height, depth, cornerRadius) {
     
     //cube([width, height, depth]);
     union() {
         translate([cornerRadius,cornerRadius,0]) {
-            cylinder(r=8, h=depth);   
+            cylinder(r=cornerRadius, h=depth);   
         }
         translate([width-cornerRadius,cornerRadius,0]) {
             cylinder(r=cornerRadius, h=depth);
@@ -83,11 +117,13 @@ module roundedCube(width, height, depth, cornerRadius) {
             cylinder(r=cornerRadius, h=depth);
         }
         
+        noCornersCube(width, height, depth, cornerRadius);
+        
         translate([cornerRadius, 0, 0]) {
-            cube([width-(2*cornerRadius), height, depth]);
+            //cube([width-(2*cornerRadius), height, depth]);
         }
         translate([0, cornerRadius, 0]) {
-            cube([width, height-(2*cornerRadius), depth]);
+            //cube([width, height-(2*cornerRadius), depth]);
         }
     }
 }
@@ -141,21 +177,22 @@ module fireDisplayCutout() {
 displayCutoutWidth = fireWidth - (2*displayXOverlap);
 displayCutoutHeight =fireHeight - (2*displayYOverlap);
     
-    
-    //translate([6, 9, 7.7]) {
     translate([displayXOverlap, displayYOverlap, 7.7]) {
-        //
-        if (roundedDisplayCutout) {
-            roundedCube (displayCutoutWidth,displayCutoutHeight , boxDepth, 8);
+       
+        if (displayBoxStyle == 3) {
+            roundedCube (displayCutoutWidth,displayCutoutHeight , boxDepth, 4);
+        } else if (displayBoxStyle == 1) {
+            noCornersCube(displayCutoutWidth,displayCutoutHeight , boxDepth, 4);
         } else {
-            cube ([displayCutoutWidth,displayCutoutHeight, boxDepth]);
+            cube ([displayCutoutWidth, displayCutoutHeight, boxDepth]);
         }
-            
     }
     
     // Camera
-    translate([200, 64, 9.9]) {
-        cylinder(d=5, h=40);
+    if (includeCameraHole) {
+        translate([200, 64, 9.9]) {
+            cylinder(d=5, h=40);
+        }
     }
 }
 
@@ -276,23 +313,23 @@ module extraSideScrewHoleCaptiveNut(x,y, length) {
 // (such as cover to hide USB cable) or hooks to be hung.
 module extraSideScrewHoles() {
     
-    
-// Max depth is...
-maxScrewHoleDepth = (boxWidth - fireWidth)/2;
-actualScrewHoleDepth = maxScrewHoleDepth +1; // -2 for heat fit
-    
-    
-yOffset = 18;
-    extraSideScrewHole(boxWidth - actualScrewHoleDepth,yOffset, actualScrewHoleDepth);
-    extraSideScrewHole(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, actualScrewHoleDepth);
-    extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,yOffset,6.5);
-    extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, 6.5);
-    
+    if (includeExtraSideScrewHoles) {
+        // Max depth is...
+        maxScrewHoleDepth = (boxWidth - fireWidth)/2;
+        actualScrewHoleDepth = maxScrewHoleDepth +1; // -2 for heat fit
+        
+        yOffset = 18;
+        extraSideScrewHole(boxWidth - actualScrewHoleDepth,yOffset, actualScrewHoleDepth);
+        extraSideScrewHole(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, actualScrewHoleDepth);
+        extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,yOffset,6.5);
+        extraSideScrewHoleCaptiveNut(boxWidth - actualScrewHoleDepth,boxHeight - yOffset, 6.5);
+        
 
-    extraSideScrewHole(-0.1,yOffset, actualScrewHoleDepth);
-    extraSideScrewHole(-0.1,boxHeight - yOffset, actualScrewHoleDepth);    
-    extraSideScrewHoleCaptiveNut(actualScrewHoleDepth-6,yOffset,6.5);
-    extraSideScrewHoleCaptiveNut(actualScrewHoleDepth-6,boxHeight - yOffset, 6.5);
+        extraSideScrewHole(-0.1,yOffset, actualScrewHoleDepth);
+        extraSideScrewHole(-0.1,boxHeight - yOffset, actualScrewHoleDepth);    
+        extraSideScrewHoleCaptiveNut(actualScrewHoleDepth-6,yOffset,6.5);
+        extraSideScrewHoleCaptiveNut(actualScrewHoleDepth-6,boxHeight - yOffset, 6.5);
+    }
 }
 
 // This needs supports. The support material can be left in
@@ -310,11 +347,13 @@ middleX = boxWidth / 2;
 // so trunking can be used up or down
 height = boxHeight - 2*leaveWallThickness;
 
-cableDiameter = 6;
+//cableDiameter = 6;
+cableDiameter = 15; // Mini-trunking.
 echo ("cableDiameter",cableDiameter);
     
 // Leave 1mm of constant fill.
 maxCableCutout = backThickness -0.6 ;
+maxCableCutout = 9.5; // Mini-trunking
 echo ("maxCableCutout",maxCableCutout);
     
     // 
@@ -327,7 +366,7 @@ echo ("maxCableCutout",maxCableCutout);
     // Give the Z-printed overlaps
     translate([middleX-(cableDiameter/2), leaveWallThickness, -0.1]) {
         
-        cube([cableDiameter, height, maxCableCutout]);
+        #cube([cableDiameter, height, maxCableCutout]);
         
         
     }
@@ -466,24 +505,62 @@ module oblongHole(x,y, d, h, length) {
 }
 
 
+module upsideDownOblongHole(x,y, d, h, length) {
+    
+    translate([x,y-length,0]) {
+        // Bottom half 
+        cylinder(d=d, h=h);
+
+        // Top hafd
+        translate([0,length,0]) {
+            cylinder(d=d, h=h);
+        }
+    }
+    
+    // rectangle inbetween
+    translate([x-d/2, y-length,0]) {
+        cube([d, length, h]);
+    }
+    
+}
+
+
 // Flat screws make it easier to adjust
 // for level & alignment errors in drilling
-module mountingHoleFlat(x,y) {
+// style: 1 - up, 2 - down, 3 - up and down
+module mountingHoleFlat(x,y, style) {
     if (useKeyHoleMounts) {
-        // through hole
-        translate([0,0,-1]) {
-            oblongHole(x,y,5, 4, 8);
-        }
-        
-        // recess for screwhead to sit in.
-        translate([0,0,1.5]) {
-            oblongHole(x,y,14, 5, 8);
-        }
-        
         // Large opening for screw head to come through.
         translate([x,y,-1]) {
             cylinder(d=10, h=5);
         }
+        
+        if (style == 1 || style == 3) {
+            // through hole
+            translate([0,0,-1]) {
+                // 8mm from centeral hole
+                oblongHole(x,y,5, 4, 8);
+            }        
+        
+            // recess for screwhead to sit in.
+            translate([0,0,1.5]) {
+                oblongHole(x,y,14, 5, 8);
+            }
+        }
+        
+        if (style == 2 || style == 3) {
+            // through hole
+            translate([0,0,-1]) {
+                upsideDownOblongHole(x,y,5, 4, 8);
+            }        
+        
+            // recess for screwhead to sit in.
+            translate([0,0,1.5]) {
+                upsideDownOblongHole(x,y,14, 5, 8);
+            }
+        }
+            
+        
     } else {    
         translate([x,y,-1]) {
             cylinder(d=5, h=4);
@@ -508,8 +585,8 @@ offset = 100;
 center = (boxWidth /2);
     
     // Center holes
-    mountingHoleFlat(center-offset,holeY);
-    mountingHoleFlat(center+offset,holeY);
+    mountingHoleFlat(center-offset,holeY, 3);
+    mountingHoleFlat(center+offset,holeY, 3);
         
     // Top/Bottom holes
     // NB: These won't align in Y axis with top jointed
@@ -520,8 +597,13 @@ center = (boxWidth /2);
         mountingHoleFlat(center+offset,25);
     }   
     
-    mountingHoleFlat(center-offset,boxHeight -25);
-    mountingHoleFlat(center+offset,boxHeight -25);
+    // Top
+    mountingHoleFlat(center-offset,boxHeight -25, 1);
+    mountingHoleFlat(center+offset,boxHeight -25, 1);
+    
+    // Bottom
+    mountingHoleFlat(center-offset,25, 2);
+    mountingHoleFlat(center+offset,25, 2);
 }
 
 module cutCorners() {
@@ -562,7 +644,9 @@ echo ("xOffset:",xOffset);
     difference() {
         union() {
             if (outerBoxStyle == 3) {
-                roundedCube (boxWidth, boxHeight, boxDepth, 20);
+                roundedCube (boxWidth, boxHeight, boxDepth, 12);
+            } else if (outerBoxStyle == 1) {
+                noCornersCube(boxWidth, boxHeight, boxDepth, 12);
             } else {
                 cube ([boxWidth, boxHeight, boxDepth]);
             }
@@ -586,9 +670,10 @@ echo ("xOffset:",xOffset);
             
             usbCableCutout();
             
-            if (outerBoxStyle == 1) {
-                cutCorners();           
-            }
+            // Box style handles this now.
+            //if (outerBoxStyle == 1) {
+                //cutCorners();           
+            //}
             
             extraSideScrewHoles();
             
@@ -653,10 +738,6 @@ echo("bezelThickness",bezelThickness);
         }
     }
 }
-
-// Used for build options.
-showLeft = false;
-showRight = true;
 
 if (showLeft) {
     wallMountLeft();

@@ -6,15 +6,16 @@ Prints vertically reducing the amount of supports required.
 
 ## Features.
 
-* Designed for easy 3D printing.
 * Holds Kindle Fire 8 HD (2017). 
+* Designed for easy 3D printing.
+* Printable on Ultimaker 2+ 
+** Prints vertically for minimal support material requirement.
+** Printable hoizontal (bezzle face down) if required (better for curved coner version), but this requires lots of support material.
 ** Can be tweaked if needed for other model or printer tollerance.
-* Cable relef for vertical trunking
+* Cable relef for vertical trunking (top and bottom).
+* Open back for use with outlet sunk into the wall.
 * Right side open for power switch
 * Accepts right angle USB micro connector to minimise overhang of connector with cable returning behind the kindle to the middle.
-* Printable on Ultimaker 2+ 
-** Prints vertically for minimal support material requirement).
-** Printable hoizontal (bezzle face down) if required - but requires lots of support material.
 * Screw joined to allow the kindle to be removed if needed but still providing solid suround.
 * Key style mounting holes for easy mounting.
 * OpenSCAD based with lots of variable options to tweak as required.
@@ -29,7 +30,17 @@ Prints vertically reducing the amount of supports required.
 ** Matches 16mm Trunking with sticky pad backing. 
 ** Doesn't require special flat USB cable. 4mm diameter cable with right angle USB Micro fits well.
 
-## Variables:
+## OpenSCAD Variables:
+
+* outerBoxStyle - style of the outer edges.
+** 1 - Cut corners
+** 2 - Square corners
+** 3 - Rounded corners
+
+* displayBoxStyle - style for the Kindle display cutout
+** 1 - Cut corners
+** 2 - Square corners
+** 3 - Rounded corners
 
 * boxWidth - how wide the enclosure is. 240-268mm suggeted range.
 
