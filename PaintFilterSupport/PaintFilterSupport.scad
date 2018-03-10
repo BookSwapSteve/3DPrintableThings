@@ -22,7 +22,7 @@ difference() {
         
         // Chop off lower part of the funnel.
         translate([-150/2, -150/2, 30]) {
-            #cube([150, 150, 100]);
+            cube([150, 150, 100]);
         }
     }
 }
