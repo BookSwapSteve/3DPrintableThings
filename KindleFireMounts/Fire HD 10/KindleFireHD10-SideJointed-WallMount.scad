@@ -43,7 +43,7 @@ backboxStyle = 3;
 // means that no suports are required
 //slicePoint = boxWidth-52.0;
 // Set slicepoint to boxWidth-46.0 (bw of 244) to get the moddle to fit on an Ultimaker (200mm height).
-slicePoint = boxWidth-66.0;
+slicePoint = boxWidth-90.0; // -66 gives 218mm slice point, -90 gives 194mm (for Ultimaker)
 echo ("slicePoint", slicePoint);
 
 // How thick the left and right borders are.
