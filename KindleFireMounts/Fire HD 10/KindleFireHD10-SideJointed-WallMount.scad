@@ -49,7 +49,7 @@ echo ("slicePoint", slicePoint);
 // How thick the left and right borders are.
 borderWidth = (boxWidth - fireWidth)/2;
 
-usbSocketStartY = 34.5 + topBottomThickness;
+usbSocketStartY = 30.5 + topBottomThickness; // 34.5
 
 // Set true to include a cutout for flat USB cable aligned with USB socket.
 useFlatUsbCable = false;
@@ -144,6 +144,11 @@ module fireModel() {
     // USB plug
     translate([262, 35, 0]) {
         cube([25, 12, 9]);
+    }
+    
+    // Right angle USB plug.
+    translate([262, 35, 0]) {
+     //   cube([25, 12, 9]);
     }
     
     // Headphones
@@ -409,13 +414,19 @@ usbConnectorCover = +2; // change to +ve to cut through
     }
     
     // And the cable from the USB plug...
+    // cut through the outer wall.
     translate([boxWidth - boxSideWidth, usbSocketStartY+25, 6.5]) {
-        #cube([borderWidth+ usbConnectorCover,45,5]);
+        #cube([borderWidth+ usbConnectorCover,49,5]);
+    }
+    
+    // inner channel for cable from USB plyg.
+    translate([boxWidth - boxSideWidth-4, usbSocketStartY+25, backThickness]) {
+        #cube([borderWidth+ usbConnectorCover,49,7]);
     }
     
     // Let the cable drop down to go behind the mount
-    translate([boxWidth-boxSideWidth, usbSocketStartY+25+38, 1]) {
-        #cube([boxSideWidth -2,7,6.5]);
+    translate([boxWidth-boxSideWidth, usbSocketStartY+25+40, 1]) {
+        #cube([boxSideWidth -2,14,10.5]);
     }
     
     // cable behind???...
@@ -470,13 +481,13 @@ module usbCableCutout() {
         // Let the cable drop down to go behind the mount
         // 1mm offset leaves a small line of plastic all the way across
         // keeping the top/bottom from moving when
-        translate([boxWidth/2-6, usbSocketStartY+25+38, 1]) {
+        translate([boxWidth/2-6, usbSocketStartY+25+40, 1]) {
             // Cable is just 4.5mm
             // if the back is made thicker this may result in 
             // the hole not being available.
             // if the back is made thinner a thinner cable
             // will need to be used.
-            #cube([(boxWidth/2) + 0.2,7,4.5]);
+            #cube([(boxWidth/2) + 0.2,14,4.5]);
         }
     }
     
