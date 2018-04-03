@@ -136,33 +136,45 @@ module fireModel() {
         cube ([175, 109, 20]);
     }
     
-    // Power button
-    translate([262, 16, 2]) {
-        #cube([30, 11, 4]);
-    }
     
-    // USB plug
-    translate([262, 35, 0]) {
-        cube([25, 12, 9]);
-    }
+    // Offset to the right hand side
+    // for all the edge buttons/connectors.
+    translate([262,0,0]) {
     
-    // Right angle USB plug.
-    translate([262, 35, 0]) {
-     //   cube([25, 12, 9]);
-    }
-    
-    // Headphones
-    translate([262, 111-3, 1]) {
-        cube([20,3,3]);
-    }
-    
-    // Volume switch
-    translate([262, 120, 2]) {
-        cube([10,23,4]);
+        // Power button
+        translate([0, 16, 2]) {
+            #cube([30, 11, 4]);
+        }
+        
+        // USB plug
+        translate([0, 35, 0]) {
+            cube([18, 11, 9]);
+            //cube([16, 11, 9]); // round right angle
+        }
+        
+        // Right angle USB plug.
+        translate([9.5, 35, 0]) {
+            cube([9, 22, 9]);
+        }
+        
+        // rounded right angle.
+        translate([9.5, 31, 0]) {
+            //cube([9, 26, 9]);
+        }
+        
+        // Headphones
+        translate([0, 111-3, 1]) {
+            cube([20,3,3]);
+        }
+        
+        // Volume switch
+        translate([0, 120, 2]) {
+            cube([10,23,4]);
+        }
     }
     
     // Camera
-    translate([199.5, 64, 9.9]) {
+    translate([250, 80, 9.9]) {
         cylinder(d=4, h=40);
     }
 }
