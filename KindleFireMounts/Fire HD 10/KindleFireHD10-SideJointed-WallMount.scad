@@ -4,7 +4,10 @@ fireWidth = 264; // 262 (cf 214 fire 8)
 fireHeight = 160; // 159 (cf 128 fire 8)
 fireThickness = 10.2; // 9.8 (cf 9.7 fire 8)
 
+// Thickness of the top and botton sections
+// these need to accomodate a M3 countersunk bolt
 topBottomThickness = 9;
+
 //boxHeight = 150; - size of the currently printed one.
 //boxHeight = 146;
 //boxHeight = 147.5; // when using 9mm top/bottom thickness and 129.5 kindle
@@ -14,7 +17,16 @@ echo("boxHeight",boxHeight);
 // Stick on trunking comes in 16mm depth (+0.5-1mm for the sticky pad.) Make thickness deeper than that so it doesn't stick out. (Don't go below 16mm as the bezel print gets messy)
 boxDepth = 17.0;
 echo("boxDepth",boxDepth);
+
+// Overall box width (side to side).
 boxWidth = 284;
+boxWidth = 284 + 18; // to allow for hiding the USB plug
+    
+// Depth to cut out to for USB connectors.
+// If this is deeper than the box side width
+// it will go all the way through. if not
+// the USB power plug will be hidden.
+usbCutoutDepth = 19;
 
 // How far the kindle is away from the back
 // Tuned to leave 3x nozzle width for the bezzle (1.8mm, 0.6mm nozzle).
@@ -48,6 +60,7 @@ echo ("slicePoint", slicePoint);
 
 // How thick the left and right borders are.
 borderWidth = (boxWidth - fireWidth)/2;
+echo("borderWidth",borderWidth);
 
 usbSocketStartY = 30.5 + topBottomThickness; // 34.5
 
@@ -415,30 +428,27 @@ boxSideWidth = (borderWidth+0.1);
     translate([boxWidth - (borderWidth+0.1), usbSocketStartY, 4.5]) {
         //cube([borderWidth+0.2,15,9]);
     }
-    
-    // USB connector can be hidden (hence -2)
-usbConnectorCover = +2; // change to +ve to cut through
-    
+        
     
     // Right angle connector and power lead.
     translate([boxWidth - boxSideWidth, usbSocketStartY, 4.5]) {
-        cube([borderWidth + usbConnectorCover,25,10]);
+        cube([usbCutoutDepth,25,10]);
     }
     
     // And the cable from the USB plug...
     // cut through the outer wall.
     translate([boxWidth - boxSideWidth, usbSocketStartY+25, 6.5]) {
-        #cube([borderWidth+ usbConnectorCover,49,5]);
+        cube([usbCutoutDepth,49,5]);
     }
     
     // inner channel for cable from USB plyg.
     translate([boxWidth - boxSideWidth-4, usbSocketStartY+25, backThickness]) {
-        #cube([borderWidth+ usbConnectorCover,49,7]);
+        cube([usbCutoutDepth,49,7]);
     }
     
     // Let the cable drop down to go behind the mount
     translate([boxWidth-boxSideWidth, usbSocketStartY+25+40, 1]) {
-        #cube([boxSideWidth -2,14,10.5]);
+        cube([usbCutoutDepth,14,10.5]);
     }
     
     // cable behind???...
@@ -476,7 +486,7 @@ module usbCableCutout() {
             }
             
             translate([0, 0 ,2]) {
-                #cube([(boxWidth/2)+10, 8,2.51]);
+                cube([(boxWidth/2)+10, 8,2.51]);
             }
             
             translate([0,7 ,-3.5]) {
@@ -499,7 +509,7 @@ module usbCableCutout() {
             // the hole not being available.
             // if the back is made thinner a thinner cable
             // will need to be used.
-            #cube([(boxWidth/2) + 0.2,14,4.5]);
+            cube([(boxWidth/2) + 0.2,14,4.5]);
         }
     }
     
@@ -782,9 +792,9 @@ if (showRight) {
     wallMountRight();
 }
 
-translate([13,topBottomThickness + 0.5,(topBottomThickness/2)]) { // 240mm width
+translate([borderWidth,topBottomThickness + 0.5,(topBottomThickness/2)]) { // 240mm width
 //translate([13+15,topBottomThickness + 0.5,4.5]) {
-    %fireModel();
+    //%fireModel();
 }
 
 
