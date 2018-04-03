@@ -1,7 +1,7 @@
 $fn=120;
 
 fireWidth = 264; // 262 (cf 214 fire 8)
-fireHeight = 161; // 159 (cf 128 fire 8)
+fireHeight = 160; // 159 (cf 128 fire 8)
 fireThickness = 10.2; // 9.8 (cf 9.7 fire 8)
 
 topBottomThickness = 9;
@@ -28,10 +28,10 @@ echo("actualTopThickness",actualTopThickness );
 // Set how much of an overlap the borders of the 
 // case overlap onto the screen
 // 20,9 leaves only the display area and no bezel visible
-displayXOverlap = 4;
+displayXOverlap = 6;
 // NB: This will effect the cut point 
 // for cutting the box in two.
-displayYOverlap = 3;
+displayYOverlap = 6;
 
 // Style of hole in the back. 1=80x80 UK box, 2=Small USB connector, 3=Large
 backboxStyle = 3; 
@@ -129,30 +129,30 @@ module roundedCube(width, height, depth, cornerRadius) {
 }
 
 module fireModel() {
-    // 2017 spec.
-    cube ([214, 128, 9.9]);
+    // 2018 spec.
+    cube ([262, 128, 9.9]);
     // Display...
     translate([19.5, 9, 9.9]) {
         cube ([175, 109, 20]);
     }
     
     // Power button
-    translate([214, 15, 2]) {
-        cube([30, 12, 4]);
+    translate([262, 16, 2]) {
+        #cube([30, 11, 4]);
     }
     
     // USB plug
-    translate([214, 35, 0]) {
+    translate([262, 35, 0]) {
         cube([25, 12, 9]);
     }
     
     // Headphones
-    translate([214, 77-3, 1]) {
+    translate([262, 111-3, 1]) {
         cube([20,3,3]);
     }
     
     // Volume switch
-    translate([214, 89, 2]) {
+    translate([262, 120, 2]) {
         cube([10,23,4]);
     }
     
@@ -374,13 +374,14 @@ echo ("maxCableCutout",maxCableCutout);
 
 // Cutout for Kindle power switch
 module switchCutout() {
-    translate([boxWidth-20, 22 + topBottomThickness, 8.5]) {
-        rotate([0,90,0]) {
-            //#cylinder(d=6, h=30);
-        }
+   
+    // Make a bigger cutout on the inside
+    // so that we can put in a press button 
+    translate([boxWidth - (borderWidth+0.1), 16+topBottomThickness-2, 2 + 4.5-2]) {
+        #cube([4, 17, 9]);
     }
     
-    translate([boxWidth - (borderWidth+0.1), 15+topBottomThickness, 2 + 4.5]) {
+    translate([boxWidth - (borderWidth+0.1), 16+topBottomThickness, 2 + 4.5]) {
         cube([borderWidth+0.2, 13, 5]);
     }
 }
@@ -421,6 +422,16 @@ usbConnectorCover = +2; // change to +ve to cut through
 }
 
 
+// Doesn't go all the way through
+// just enough to give space for the volume button
+module volumeButtonCutout() {
+   
+    // Make a bigger cutout on the inside
+    // so that we can put in a press button 
+    translate([boxWidth - (borderWidth+0.1), 118+topBottomThickness, 2 + 4.5-2]) {
+        #cube([4, 30, 9]);
+    }
+}
 
 // Cutout for USB cable.
 module usbCableCutout() {
@@ -669,6 +680,8 @@ echo ("xOffset:",xOffset);
             
             usbCableCutout();
             
+            volumeButtonCutout();
+            
             // Box style handles this now.
             //if (outerBoxStyle == 1) {
                 //cutCorners();           
@@ -748,7 +761,7 @@ if (showRight) {
 
 translate([13,topBottomThickness + 0.5,(topBottomThickness/2)]) { // 240mm width
 //translate([13+15,topBottomThickness + 0.5,4.5]) {
-    //%fireModel();
+    %fireModel();
 }
 
 
