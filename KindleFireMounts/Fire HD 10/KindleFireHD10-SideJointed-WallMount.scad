@@ -1,6 +1,9 @@
 $fn=120;
 
-fireWidth = 264; // 262 (cf 214 fire 8)
+// If to use Heatfit inserts for the joint.
+useInserts = false;
+
+fireWidth = 263; // 262 (cf 214 fire 8)
 fireHeight = 160; // 159 (cf 128 fire 8)
 fireThickness = 10.2; // 9.8 (cf 9.7 fire 8)
 
@@ -19,8 +22,8 @@ boxDepth = 17.0;
 echo("boxDepth",boxDepth);
 
 // Overall box width (side to side).
-boxWidth = 284;
-boxWidth = 284 + 18; // to allow for hiding the USB plug
+boxWidth = 283;
+boxWidth = 283 + 20; // to allow for hiding the USB plug
     
 // Depth to cut out to for USB connectors.
 // If this is deeper than the box side width
@@ -274,19 +277,36 @@ module sideConnectionHolesCutout(y) {
     // use y-10 to translate outside of model to help debug.
     translate([0, y, boxDepth/2+0]) {
         // 12mm into the case for the screw body
-        translate([slicePoint-12, 0, 0]) {
+        
+        // Ensure right hand side has 
+        translate([slicePoint-20, 0, 0]) {
             rotate([0,90,0]) {
-                cylinder(d=4.3, h=boxWidth-slicePoint+20);
+                if (useInserts) {
+                    // 4.3mm hole for heat fit insert.
+                    cylinder(d=4.3, h=20.1);
+                } else {
+                    // 3ish mm hole for M3 bolt to bite into
+                    // (shug fit when using 0.4mm nozzle)
+                    #cylinder(d1=3.2, d2=3.6, h=20.1);
+                }
             }
         }
         
+        // Ensure right hand side has 
+        translate([slicePoint-1, 0, 0]) {
+            rotate([0,90,0]) {
+                #cylinder(d=3.4, h=boxWidth-slicePoint+20);
+            }
+        }
+        
+        // Counter sink and hollow out right hand section
         // 6mm thread depth inside each component
         // add the countersink + hole countout.
         // NB: Using countersink as the hold is printed fat side down
         // and a flat hold would not come out well.
         translate([slicePoint+6, 0, 0]) {
             rotate([0,90,0]) {
-                cylinder(d=4.3, d2=6.8, h=2.5);
+                #cylinder(d=4.3, d2=6.8, h=2.5);
             }
             
             translate([2.5, 0, 0]) {
@@ -368,37 +388,53 @@ module extraSideScrewHoles() {
 // the bottom of the mount 
 module verticalCableExit() {
 
+// Set this to true to include cutouts for 
+// top/bottom trunking. Need to enable supports when printing.
+// without openTop/Bottom a 1.2mm wall is left to trim as 
+// desired.
+includeTrunkingCutout = true;
+    
+// Open the top to allow trunking to fit in neatly
+// With top vertical trunking you need to slide the 
+// mount over the trunking if you fit after trunking is fitted.
+openTopTrunking = true;
+
+// Open the bottom to allow trunking to fit in neatly.
+openBottomTrunking = false;
+    
+// Trunking cutout size.
+trunkingCutoutWidth = 15; // Mini-trunking.
+trunkingCutoutDepth = 9.5; // Mini-trunking
+    
 // Don't cut all the way through the shell, allow the user
 // to do this so maintaining a nice outer finish.
-leaveWallThickness = 1;
-    
+leaveWallThickness = 1.2;
+   
 middleX = boxWidth / 2;
+    
 // Make it go all the way from top to bottom
 // so trunking can be used up or down
-height = boxHeight - 2*leaveWallThickness;
+height = boxHeight - (2*leaveWallThickness);
 
-//cableDiameter = 6;
-cableDiameter = 15; // Mini-trunking.
-echo ("cableDiameter",cableDiameter);
-    
-// Leave 1mm of constant fill.
-maxCableCutout = backThickness -0.6 ;
-maxCableCutout = 9.5; // Mini-trunking
-echo ("maxCableCutout",maxCableCutout);
-    
-    // 
-    translate([middleX + maxCableCutout/2, leaveWallThickness ,cableDiameter/2]) {
-        rotate([-90,0,0]) {
-            //#cylinder(d=cableDiameter, h=middleY);
+    if (includeTrunkingCutout) {
+        // Give the Z-printed overlaps
+        translate([middleX-(trunkingCutoutWidth/2), 0, -0.1]) {
+            translate([0, leaveWallThickness, 0]) {
+                cube([trunkingCutoutWidth, height, trunkingCutoutDepth]);
+            }
+        
+            if (openTopTrunking) {
+                translate([0, boxHeight-4, -0.1]) {
+                    cube([trunkingCutoutWidth, 8, trunkingCutoutDepth]);
+                }
+            }
+        
+            if (openBottomTrunking) {
+                translate([0, -4, -0.1]) {
+                    cube([trunkingCutoutWidth, 8, trunkingCutoutDepth]);
+                }
+            }
         }
-    }
-    
-    // Give the Z-printed overlaps
-    translate([middleX-(cableDiameter/2), leaveWallThickness, -0.1]) {
-        
-        #cube([cableDiameter, height, maxCableCutout]);
-        
-        
     }
 }
 
