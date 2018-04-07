@@ -94,6 +94,34 @@ showRight = true;
 
 includeExtraSideScrewHoles = false;
 
+// Set this to true to include cutouts for 
+// top/bottom trunking. Need to enable supports when printing.
+// without openTop/Bottom a 1.2mm wall is left to trim as 
+// desired.
+includeTrunkingCutout = false;
+    
+// Open the top to allow trunking to fit in neatly
+// With top vertical trunking you need to slide the 
+// mount over the trunking if you fit after trunking is fitted.
+openTopTrunking = true;
+
+// Open the bottom to allow trunking to fit in neatly.
+openBottomTrunking = false;
+    
+// Trunking cutout size.
+trunkingCutoutWidth = 15; // Mini-trunking.
+trunkingCutoutDepth = 9.5; // Mini-trunking
+    
+// Don't cut all the way through the shell, allow the user
+// to do this so maintaining a nice outer finish.
+leaveWallThickness = 1.2;
+   
+middleX = boxWidth / 2;
+    
+// Make it go all the way from top to bottom
+// so trunking can be used up or down
+height = boxHeight - (2*leaveWallThickness);
+
 module noCornersCube(width, height, depth, cornerRadius) {
     
     //cube([width, height, depth]);
@@ -387,34 +415,6 @@ module extraSideScrewHoles() {
 // Cutout to allow the cable to exit through 
 // the bottom of the mount 
 module verticalCableExit() {
-
-// Set this to true to include cutouts for 
-// top/bottom trunking. Need to enable supports when printing.
-// without openTop/Bottom a 1.2mm wall is left to trim as 
-// desired.
-includeTrunkingCutout = true;
-    
-// Open the top to allow trunking to fit in neatly
-// With top vertical trunking you need to slide the 
-// mount over the trunking if you fit after trunking is fitted.
-openTopTrunking = true;
-
-// Open the bottom to allow trunking to fit in neatly.
-openBottomTrunking = false;
-    
-// Trunking cutout size.
-trunkingCutoutWidth = 15; // Mini-trunking.
-trunkingCutoutDepth = 9.5; // Mini-trunking
-    
-// Don't cut all the way through the shell, allow the user
-// to do this so maintaining a nice outer finish.
-leaveWallThickness = 1.2;
-   
-middleX = boxWidth / 2;
-    
-// Make it go all the way from top to bottom
-// so trunking can be used up or down
-height = boxHeight - (2*leaveWallThickness);
 
     if (includeTrunkingCutout) {
         // Give the Z-printed overlaps

@@ -5,6 +5,10 @@ del *.stl
 
 @echo Building Side Joined Kindle Fire 8 HD wall mount.
 
+@echo Button
+"C:\Program Files\OpenSCAD\openscad.com" -o Button-Flush.stl -D "buttonHeight=20" Button.scad
+"C:\Program Files\OpenSCAD\openscad.com" -o Button-Protruding.stl -D "buttonHeight=22" Button.scad
+
 @echo Cut corners version
 "C:\Program Files\OpenSCAD\openscad.com" -o Fire10-45-Right.stl -D "outerBoxStyle=1;displayBoxStyle=1;showLeft=false;showRight=true" KindleFireHD10-SideJointed-WallMount.scad
 "C:\Program Files\OpenSCAD\openscad.com" -o Fire10-45-Left.stl -D "outerBoxStyle=1;displayBoxStyle=1;showLeft=true;showRight=false" KindleFireHD10-SideJointed-WallMount.scad
